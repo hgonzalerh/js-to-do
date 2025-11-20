@@ -1,0 +1,69 @@
+name: Apply all security recommendations using Ansible Job Template
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - test
+jobs:
+  build:
+    name: Ansible Lint # Naming the build is important to use it as a status check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ansible-lint
+        uses: ansible/ansible-lint@v6.22.2 # or version tag instead of 'main
+        with:
+          args: --profile min .
+
+  runOnAnsible:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
+    steps:
+      - name: Trigger compliance Job on Automation Controller
+        run: |
+          ANSIBLE_CONTROLLER_URL="https://electric-hermit-remarkably.ngrok-free.app"
+          
+          # Start a new job through the Automation Controller API
+          RESPONSE=$(curl -X POST -s -k -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" -A "nonstandardUA" "$ANSIBLE_CONTROLLER_URL/api/v2/job_templates/Autocompliance_${BRANCH_NAME}++Default/launch/")
+          
+          # Parse to get what job was started
+          JOB_ID=$(echo $RESPONSE | jq -r '.job')
+          echo El job id es $JOB_ID
+          
+          # Pass variables to next step
+          echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
+          echo "ANSIBLE_CONTROLLER_URL=$ANSIBLE_CONTROLLER_URL" >> $GITHUB_ENV
+
+      - name: Wait for completion of Compliance job and report failed hosts if any
+        run: |
+          # Print where to find the logs
+          echo Examine job progress at "$ANSIBLE_CONTROLLER_URL/#/jobs/playbook/${JOB_ID}"
+          
+          # Query the job API to see if it has finished
+          JOB_STATUS="new"
+          while [[ "$JOB_STATUS" == "new" || "$JOB_STATUS" == "pending" || "$JOB_STATUS" == "running"  || "$JOB_STATUS" == "waiting" ]]; do
+            sleep 10  # Poll every 30 seconds; adjust as necessary
+            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "$ANSIBLE_CONTROLLER_URL/api/v2/jobs/$JOB_ID/" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
+            JOB_STATUS=$(echo $RESPONSE | jq -r '.status')
+            echo "Job status: $JOB_STATUS"
+          done
+
+          if [[ "$JOB_STATUS" == "successful" ]]; then
+            echo "Job completed successfully."
+            exit 0
+          else
+            # Handle the job failure case, print what jobs have failed
+            echo "Job failed with status $JOB_STATUS."
+
+            # Report failed hosts
+            # Get job stdout to get the summary part
+            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "$ANSIBLE_CONTROLLER_URL/api/v2/jobs/$JOB_ID/stdout/?format=txt" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
+
+            # Print host summary from STDOUT
+            echo "Please examine failed hosts manually:"
+            echo "$RESPONSE" | awk '/PLAY RECAP/{flag=1} flag' | grep -E '(failed=[1-9])|(unreachable=[1-9])'
+            echo "====================================="
+            exit 1
+          fi
