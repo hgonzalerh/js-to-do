@@ -17,7 +17,7 @@ jobs:
           # ANSIBLE_CONTROLLER_URL
           
           # Start a new job through the Automation Controller API
-          RESPONSE=$(curl -X POST -s -k -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" -A "nonstandardUA" "$ANSIBLE_CONTROLLER_URL/api/controller/v2/job_templates/Deploy_${BRANCH_NAME}++Default/launch/")
+          RESPONSE=$(curl -X POST -s -k -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" -A "nonstandardUA" "${ANSIBLE_CONTROLLER_URL}/api/controller/v2/job_templates/Demo%20Job%20Template++Default/launch")
           
           # Parse to get what job was started
           JOB_ID=$(echo $RESPONSE | jq -r '.job')
