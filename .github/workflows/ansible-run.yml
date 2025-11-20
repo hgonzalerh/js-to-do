@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Send REST to Automation Gateway
         run: |
-          # From variables comes
+          # From variables comes (change a dumb comment here)
           # ANSIBLE_CONTROLLER_URL
           
           # Start a new job through the Automation Controller API
