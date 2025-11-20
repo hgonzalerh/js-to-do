@@ -1,4 +1,4 @@
-name: Apply all security recommendations using Ansible Job Template
+name: Trigger deployment of application on Linux depending on environment
 on:
   workflow_dispatch:
   push:
@@ -6,27 +6,18 @@ on:
       - main
       - test
 jobs:
-  build:
-    name: Ansible Lint # Naming the build is important to use it as a status check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run ansible-lint
-        uses: ansible/ansible-lint@v6.22.2 # or version tag instead of 'main
-        with:
-          args: --profile min .
-
   runOnAnsible:
     runs-on: ubuntu-latest
     env:
       BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
     steps:
-      - name: Trigger compliance Job on Automation Controller
+      - name: Send REST to Automation Gateway
         run: |
-          ANSIBLE_CONTROLLER_URL="https://electric-hermit-remarkably.ngrok-free.app"
+          # From variables comes
+          # ANSIBLE_CONTROLLER_URL
           
           # Start a new job through the Automation Controller API
-          RESPONSE=$(curl -X POST -s -k -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" -A "nonstandardUA" "$ANSIBLE_CONTROLLER_URL/api/v2/job_templates/Autocompliance_${BRANCH_NAME}++Default/launch/")
+          RESPONSE=$(curl -X POST -s -k -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" -A "nonstandardUA" "$ANSIBLE_CONTROLLER_URL/api/controller/v2/job_templates/Deploy_${BRANCH_NAME}++Default/launch/")
           
           # Parse to get what job was started
           JOB_ID=$(echo $RESPONSE | jq -r '.job')
@@ -36,7 +27,7 @@ jobs:
           echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
           echo "ANSIBLE_CONTROLLER_URL=$ANSIBLE_CONTROLLER_URL" >> $GITHUB_ENV
 
-      - name: Wait for completion of Compliance job and report failed hosts if any
+      - name: Wait for completion of deploy job
         run: |
           # Print where to find the logs
           echo Examine job progress at "$ANSIBLE_CONTROLLER_URL/#/jobs/playbook/${JOB_ID}"
@@ -45,7 +36,7 @@ jobs:
           JOB_STATUS="new"
           while [[ "$JOB_STATUS" == "new" || "$JOB_STATUS" == "pending" || "$JOB_STATUS" == "running"  || "$JOB_STATUS" == "waiting" ]]; do
             sleep 10  # Poll every 30 seconds; adjust as necessary
-            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "$ANSIBLE_CONTROLLER_URL/api/v2/jobs/$JOB_ID/" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
+            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "$ANSIBLE_CONTROLLER_URL/api/controller/v2/jobs/$JOB_ID/" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
             JOB_STATUS=$(echo $RESPONSE | jq -r '.status')
             echo "Job status: $JOB_STATUS"
           done
@@ -59,7 +50,7 @@ jobs:
 
             # Report failed hosts
             # Get job stdout to get the summary part
-            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "$ANSIBLE_CONTROLLER_URL/api/v2/jobs/$JOB_ID/stdout/?format=txt" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
+            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "$ANSIBLE_CONTROLLER_URL/api/controller/v2/jobs/$JOB_ID/stdout/?format=txt" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
 
             # Print host summary from STDOUT
             echo "Please examine failed hosts manually:"
