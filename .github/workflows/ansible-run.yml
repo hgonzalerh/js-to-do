@@ -12,6 +12,11 @@ jobs:
     env:
       BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
     steps:
+      - name: Show variables
+        run: |
+          echo ${ANSIBLE_CONTROLLER_URL}
+          exit 1
+          
       - name: Send REST to Automation Gateway
         run: |
           # From variables comes (change a dumb comment here)
