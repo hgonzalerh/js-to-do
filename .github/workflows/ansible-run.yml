@@ -11,10 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
+      
     steps:
       - name: Show variables
         run: |
-          echo $ANSIBLE_CONTROLLER_URL
+          echo ${{ vars.ANSIBLE_CONTROLLER_URL }}
           exit 1
           
       - name: Send REST to Automation Gateway
