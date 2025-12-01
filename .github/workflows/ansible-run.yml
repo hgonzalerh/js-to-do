@@ -15,16 +15,15 @@ jobs:
     steps:
       - name: Show variables
         run: |
-          echo ${{ vars.ANSIBLE_CONTROLLER_URL }}
-          exit 1
-          
+          echo ${{ vars.ANSIBLE_CONTROLLER_URL }}, ${{ secrets.ANSIBLE_TOKEN }}
+          exit 0
       - name: Send REST to Automation Gateway
         run: |
           # From variables comes (change a dumb comment here)
           # ANSIBLE_CONTROLLER_URL
           
           # Start a new job through the Automation Controller API
-          RESPONSE=$(curl -v -X POST -s -k -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" -A "nonstandardUA" "${ANSIBLE_CONTROLLER_URL}/api/controller/v2/job_templates/Demo%20Job%20Template++Default/launch")
+          RESPONSE=$(curl -v -X POST -s -k -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" -A "nonstandardUA" "${{ vars.ANSIBLE_CONTROLLER_URL }}/api/controller/v2/job_templates/Demo%20Job%20Template++Default/launch")
           
           # Parse to get what job was started
           JOB_ID=$(echo $RESPONSE | jq -r '.job')
