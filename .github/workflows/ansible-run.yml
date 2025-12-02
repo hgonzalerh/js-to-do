@@ -20,13 +20,25 @@ jobs:
         run: |
           # From variables comes (change a dumb comment here)
           # ANSIBLE_CONTROLLER_URL
+
           
+          # Choose  invnetory id depending on current branch
+          BRANCH_NAME="${{ github.ref_name }}"
+          if [ "$BRANCH_NAME" == "main" ]; then
+            INVENTORY_ID="2"
+          elif [ "$BRANCH_NAME" == "dev" ]; then
+            INVENTORY_ID="3"
+          else
+            # Set a default ID or fail the workflow for unknown branches
+            echo "::error::Branch '$BRANCH_NAME' is not mapped to an inventory ID."
+            exit 1
+          fi
           # Start a new job through the Automation Controller API
           RESPONSE=$(curl -v -X POST -s -k \
                      -H "Content-Type: application/json" \
                      -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" \
                      -A "nonstandardUA" \
-                     --data '{"inventory": "Webserver PROD"}'\
+                     --data '{"inventory": "$INVENTORY_ID"}'\
                      "${{ vars.ANSIBLE_CONTROLLER_URL }}/api/controller/v2/job_templates/Deploy%20Javascript%20TODO%20List%20Application/launch" \
                     ) 
           # Debug full response
