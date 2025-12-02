@@ -22,7 +22,12 @@ jobs:
           # ANSIBLE_CONTROLLER_URL
           
           # Start a new job through the Automation Controller API
-          RESPONSE=$(curl -v -X POST -s -k -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" -A "nonstandardUA" "${{ vars.ANSIBLE_CONTROLLER_URL }}/api/controller/v2/job_templates/Demo%20Job%20Template++Default/launch")
+          RESPONSE=$(curl -v -X POST -s -k \
+                     -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" \
+                     -A "nonstandardUA" \
+                     --data '{"inventory": "Webserver PROD"}'\
+                     "${{ vars.ANSIBLE_CONTROLLER_URL }}/api/controller/v2/job_templates/Deploy%20Javascript%20TODO%20List%20Application/launch" \
+                    ) 
           
           # Parse to get what job was started
           JOB_ID=$(echo $RESPONSE | jq -r '.job')
