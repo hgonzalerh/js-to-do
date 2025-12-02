@@ -38,7 +38,7 @@ jobs:
                      -H "Content-Type: application/json" \
                      -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" \
                      -A "nonstandardUA" \
-                     --data '{"inventory": "$INVENTORY_ID"}'\
+                     --data '{"inventory": $INVENTORY_ID}'\
                      "${{ vars.ANSIBLE_CONTROLLER_URL }}/api/controller/v2/job_templates/Deploy%20Javascript%20TODO%20List%20Application/launch" \
                     ) 
           # Debug full response
