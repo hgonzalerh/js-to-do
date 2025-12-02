@@ -30,18 +30,17 @@ jobs:
           
           # Pass variables to next step
           echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
-          # echo "ANSIBLE_CONTROLLER_URL=$ANSIBLE_CONTROLLER_URL" >> $GITHUB_ENV
 
       - name: Wait for completion of deploy job
         run: |
           # Print where to find the logs
-          echo Examine job progress at "$ANSIBLE_CONTROLLER_URL/#/jobs/playbook/${JOB_ID}"
+          echo Examine job progress at "${{ vars.ANSIBLE_CONTROLLER_URL }}/#/jobs/playbook/${JOB_ID}"
           
           # Query the job API to see if it has finished
           JOB_STATUS="new"
           while [[ "$JOB_STATUS" == "new" || "$JOB_STATUS" == "pending" || "$JOB_STATUS" == "running"  || "$JOB_STATUS" == "waiting" ]]; do
             sleep 10  # Poll every 30 seconds; adjust as necessary
-            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "$ANSIBLE_CONTROLLER_URL/api/controller/v2/jobs/$JOB_ID/" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
+            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "${{ vars.ANSIBLE_CONTROLLER_URL }}/api/controller/v2/jobs/$JOB_ID/" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
             JOB_STATUS=$(echo $RESPONSE | jq -r '.status')
             echo "Job status: $JOB_STATUS"
           done
@@ -55,7 +54,7 @@ jobs:
 
             # Report failed hosts
             # Get job stdout to get the summary part
-            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "$ANSIBLE_CONTROLLER_URL/api/controller/v2/jobs/$JOB_ID/stdout/?format=txt" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
+            RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "${{ vars.ANSIBLE_CONTROLLER_URL }}/api/controller/v2/jobs/$JOB_ID/stdout/?format=txt" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
 
             # Print host summary from STDOUT
             echo "Please examine failed hosts manually:"
