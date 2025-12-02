@@ -24,7 +24,7 @@ jobs:
           
           # Choose  invnetory id depending on current branch
           BRANCH_NAME="${{ github.ref_name }}"
-          if [ "$BRANCH_NAME" == "main" ]; then
+          if [ "$BRANCH_NAME" == "master" ]; then
             INVENTORY_ID="2"
           elif [ "$BRANCH_NAME" == "dev" ]; then
             INVENTORY_ID="3"
