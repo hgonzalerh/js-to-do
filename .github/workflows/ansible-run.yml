@@ -23,6 +23,7 @@ jobs:
           
           # Start a new job through the Automation Controller API
           RESPONSE=$(curl -v -X POST -s -k \
+                     -H "Content-Type: application/json" \
                      -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}" \
                      -A "nonstandardUA" \
                      --data '{"inventory": "Webserver PROD"}'\
