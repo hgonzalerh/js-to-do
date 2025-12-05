@@ -22,7 +22,6 @@ jobs:
           # ANSIBLE_CONTROLLER_URL
           # From secrets comes
           # ANSIBLE_TOKEN
-
           
           # Choose  invnetory id depending on current branch
           BRANCH_NAME="${{ github.ref_name }}"
@@ -51,7 +50,7 @@ jobs:
           
           # Pass variables to next step
           echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
-
+          
       - name: Wait for completion of deploy job
         run: |
           # Print where to find the logs
@@ -72,14 +71,4 @@ jobs:
           else
             # Handle the job failure case, print what jobs have failed
             echo "Job failed with status $JOB_STATUS."
-
-      #       # Report failed hosts
-      #       # Get job stdout to get the summary part
-      #       RESPONSE=$(curl -s -k -A "nonstandardUA" -X GET "${{ vars.ANSIBLE_CONTROLLER_URL }}/api/controller/v2/jobs/$JOB_ID/stdout/?format=txt" -H "Authorization: Bearer ${{ secrets.ANSIBLE_TOKEN }}")
-
-      #       # Print host summary from STDOUT
-      #       echo "Please examine failed hosts manually:"
-      #       echo "$RESPONSE" | awk '/PLAY RECAP/{flag=1} flag' | grep -E '(failed=[1-9])|(unreachable=[1-9])'
-      #       echo "====================================="
-      #       exit 1
           fi
