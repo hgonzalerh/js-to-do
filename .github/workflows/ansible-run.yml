@@ -54,7 +54,7 @@ jobs:
       - name: Wait for completion of deploy job
         run: |
           # Print where to find the logs
-          echo Examine job progress at "${{ vars.ANSIBLE_CONTROLLER_URL }}/#/jobs/playbook/${JOB_ID}"
+          echo Examine job progress at "${{ vars.ANSIBLE_CONTROLLER_URL }}/#/jobs/playbook/${JOB_ID}/output"
           
           # Query the job API to see if it has finished
           JOB_STATUS="new"
